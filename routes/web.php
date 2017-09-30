@@ -12,9 +12,13 @@
 */
 Auth::routes();
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'FrontController@index');
 
+Route::get('/about', 'FrontController@about');
+
+Route::get('/contact', 'FrontController@contact');
+Route::post('/contact', 'FrontController@store');
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/{url}', 'FrontController@UnitBisnis');
