@@ -21,4 +21,6 @@ Route::post('/contact', 'FrontController@store');
 
 Route::get('/home', 'HomeController@index')->name('home');
 
+Route::get('/blog', 'FrontController@blog');
+
 Route::get('/{url}', 'FrontController@UnitBisnis');

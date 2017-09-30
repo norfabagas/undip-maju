@@ -7,6 +7,12 @@ use App\UnitBisnis;
 use App\Value;
 use App\FrontConfig;
 use App\VisiMisi;
+use App\Contact;
+use App\Blog;
+use App\Category;
+use App\Tag;
+use App\BlogTag;
+use Validator;
 
 class FrontController extends Controller
 {
@@ -74,7 +80,20 @@ class FrontController extends Controller
 
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'Name' => 'required|max:255',
+            'Email' => 'required|email|max:255',
+            'Subject' => 'required|max:255',
+            'Message' => 'required'
+        ]);
+
+        $contact = new Contact;
+        $contact->nama = $request->Name;
+        $contact->email = $request->Email;
+        $contact->subject = $request->Subject;
+        $contact->message = $request->Message;
+        $contact->save();
+        return redirect('/contact');
     }
 
     /**
@@ -85,7 +104,19 @@ class FrontController extends Controller
      */
     public function contact()
     {
-        return view('front.contact');
+        $alamat = FrontConfig::where('config_name', '=', 'alamat')->first();
+        $email = FrontConfig::where('config_name', '=', 'email')->first();
+        $telepon = FrontConfig::where('config_name', '=', 'telepon')->first();
+
+        return view('front.contact')
+            ->with('alamat', $alamat)
+            ->with('email', $email)
+            ->with('telepon', $telepon);
+    }
+
+    public function blog()
+    {
+        
     }
 
     public function show($id)

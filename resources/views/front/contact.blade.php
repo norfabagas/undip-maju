@@ -13,33 +13,35 @@ HUBUNGI KAMI
 					<div class="address-grid">
 						<h4>ALAMAT KAMI</h4>
 						<ul class="w3_address">
-							<li><i class="fa fa-map-marker" aria-hidden="true"></i>Tembalang, Semarang, Jawa Tengah.</li>
-							<li><i class="fa fa-envelope" aria-hidden="true"></i><a href="mailto:info@example.com">info@example.com</a></li>
-							<li><i class="fa fa-phone" aria-hidden="true"></i>+1234 567 567</li>
+							<li><i class="fa fa-map-marker" aria-hidden="true"></i>{{ $alamat->config_value }}</li>
+							<li><i class="fa fa-envelope" aria-hidden="true"></i><a href="mailto:{{ $email->config_value }}">{{ $email->config_value }}</a></li>
+							<li><i class="fa fa-phone" aria-hidden="true"></i>{{ $telepon->config_value }}</li>
 						</ul>
 					</div>
 					<div class="contact-form">
 						<h4>FORM KONTAK</h4>
-						<form action="#" method="post">
+						<form action="{{ url()->current() }}" method="post">
+                            {{ csrf_field() }}
+
 							<div class="styled-input agile-styled-input-top">
 								<input type="text" name="Name" required="">
 								<label>Name</label>
-								<span></span>
+								{!! $errors->first('Name', '<i>:message</i>') !!}
 							</div>
 							<div class="styled-input">
 								<input type="email" name="Email" required="">
 								<label>Email</label>
-								<span></span>
+								{!! $errors->first('Email', '<i>:message</i>') !!}
 							</div>
 							<div class="styled-input">
 								<input type="text" name="Subject" required="">
 								<label>Subject</label>
-								<span></span>
+								{!! $errors->first('Subject', '<i>:message</i>') !!}
 							</div>
 							<div class="styled-input">
 								<textarea name="Message" required=""></textarea>
 								<label>Message</label>
-								<span></span>
+								{!! $errors->first('Message', '<i>:message</i>') !!}
 							</div>
 							<input type="submit" value="SEND">
 						</form>
