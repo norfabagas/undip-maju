@@ -14,6 +14,7 @@ use App\Category;
 use App\Contact;
 use App\VisiMisi;
 use Validator;
+use DB;
 
 use Illuminate\Support\Facades\Input;
 use File;
@@ -34,7 +35,15 @@ class BackController extends Controller
 
     public function index()
     {
-        return view('back.index');
+        $contact = Contact::where('read', '=', 'no')->count();
+        $blog = Blog::count();
+        $category = Category::count();
+        $tag = Tag::count();
+        return view('back.index')
+            ->with('blog', $blog)
+            ->with('contact', $contact)
+            ->with('category', $category)
+            ->with('tag', $tag);
     }
 
     public function general()
@@ -280,6 +289,217 @@ class BackController extends Controller
 
         return view('back.contactview')
             ->with('message', $message);
+    }
+
+    public function category()
+    {
+        $category = Category::get();
+        return view('back.category')
+            ->with('category', $category);
+    }
+
+    public function categoryStore(Request $request)
+    {
+        $category = new Category();
+        $category->category = $request->category;
+        $category->save();
+
+        return redirect(url()->current());
+    }
+
+    public function categoryDestroy($id)
+    {
+        $category = Category::destroy($id);
+        return redirect(url()->previous());
+    }
+
+    public function tag()
+    {
+        $tag = Tag::get();
+        return view('back.tag')
+            ->with('tag', $tag);
+    }
+
+    public function tagStore(Request $request)
+    {
+        $tag = new Tag();
+        $tag->tag = $request->tag;
+        $tag->save();
+
+        return redirect(url()->current());
+    }
+
+    public function tagDestroy($id)
+    {
+        $tag = Tag::destroy($id);
+        return redirect(url()->previous());
+    }
+
+    public function blog()
+    {
+        $blog = DB::table('blogs')
+            ->join('categories', 'blogs.id_category', '=', 'categories.id')
+            ->join('users', 'blogs.author', '=', 'users.id')
+            ->select('blogs.*', 'categories.category', 'users.name')
+            ->get();
+
+        return view('back.blog')
+            ->with('blog', $blog);
+    }
+
+    public function blogCreate()
+    {
+        $category = Category::get();
+        $tag = Tag::get();
+
+        return view('back.blog_add')
+            ->with('category', $category)
+            ->with('tag', $tag);
+    }
+
+    public function blogStore(Request $request)
+    {
+        $this->validate($request, [
+            'title' => 'required',
+            'content' => 'required',
+            'image' => 'required|image'
+        ]);
+
+        $blog = new Blog();
+
+        $blog->title = $request->title;
+        $blog->url = str_slug($request->title);
+        $blog->content = $request->content;
+        $blog->author = \Auth::user()->id;
+        $blog->id_category = $request->category;
+
+        $fileName = Input::file('image')->getClientOriginalName();
+        $request->file('image')->move('images/blog', $fileName);
+        $blog->image = $fileName;
+
+        $blog->save();
+
+        return redirect('admin/blog');
+    }
+
+    public function blogEdit($id)
+    {
+        $blog = Blog::find($id);
+        $category = Category::get();
+
+        return view('back.blog_edit')
+            ->with('blog', $blog)
+            ->with('category', $category);
+    }
+
+    public function blogUpdate(Request $request, $id)
+    {
+        $this->validate($request, [
+            'title' => 'required',
+            'content' => 'required',
+            'image' => 'required|image'
+        ]);
+
+        $blog = Blog::find($id);
+        $blog->title = $request->title;
+        $blog->id_category = $request->category;
+        $blog->content = $request->content;
+
+        if ($request->file('image')) {
+            $fileName = Input::file('image')->getClientOriginalName();
+            $request->file('image')->move('images/blog', $fileName);
+            $blog->image = $fileName;
+        }
+
+        $blog->save();
+
+        return redirect('admin/blog');
+    }
+
+    public function blogDestroy($id)
+    {
+        $blog = Blog::destroy($id);
+        return redirect(url()->previous());
+    }
+
+    public function user()
+    {
+        if (\Auth::user()->level !== 'admin') {
+            return redirect('admin');
+        }
+
+        $user = User::where('level', '=', 'user')
+            ->get();
+
+        return view('back.user')
+            ->with('user', $user);
+    }
+
+    public function userAdd()
+    {
+        if (\Auth::user()->level !== 'admin') {
+            return redirect('admin');
+        }
+
+        return view('back.user_add');
+    }
+
+    public function userStore(Request $request)
+    {
+        if (\Auth::user()->level !== 'admin') {
+            return redirect('admin');
+        }
+
+        $this->validate($request, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = new User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
+        $user->save();
+    }
+
+    public function userEdit($id)
+    {
+        $user = User::find($id);
+
+        return view('back.user_edit')
+            ->with('user', $user);
+    }
+
+    public function userUpdate(Request $request, $id)
+    {
+        $this->validate($request, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id ,
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = User::find($id);
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        return redirect('admin/user');
+    }
+
+    public function userDestroy($id)
+    {
+        if (\Auth::user()->level !== 'admin') {
+            return redirect('admin');
+        }
+
+        $user = User::find($id);
+        if ($user->level === 'user') {
+            $user->delete();
+        }
+
+        return redirect(url()->previous());
     }
 
     public function create()

@@ -18,6 +18,7 @@ class CreateUsersTable extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
+            $table->enum('level', ['admin', 'user'])->default('user');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -26,6 +27,13 @@ class CreateUsersTable extends Migration
             [
                 'name' => 'admin',
                 'email' => 'admin@mail.com',
+                'level' => 'admin',
+                'password' => bcrypt('katakunci')
+            ],
+            [
+                'name' => 'user1',
+                'email' => 'user1@mail.com',
+                'level' => 'user',
                 'password' => bcrypt('katakunci')
             ]
         ]);

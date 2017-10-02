@@ -13,6 +13,7 @@ use App\Category;
 use App\Tag;
 use App\BlogTag;
 use Validator;
+use DB;
 
 class FrontController extends Controller
 {
@@ -114,9 +115,60 @@ class FrontController extends Controller
             ->with('telepon', $telepon);
     }
 
-    public function blog()
+    public function blog(Request $request)
     {
-        
+        $blog = DB::table('blogs')
+            ->join('categories', 'blogs.id_category', '=', 'categories.id')
+            ->join('users', 'blogs.author', '=', 'users.id')
+            ->select('blogs.*', 'categories.category', 'users.name')
+            ->orderBy('blogs.created_at', 'desc')
+            ->paginate('5');
+
+        if (isset($request->s)) {
+            $blog = DB::table('blogs')
+                ->join('categories', 'blogs.id_category', '=', 'categories.id')
+                ->join('users', 'blogs.author', '=', 'users.id')
+                ->select('blogs.*', 'categories.category', 'users.name')
+                ->where('blogs.title', 'like', '%' . $request->s . '%')
+                ->orderBy('blogs.created_at', 'desc')
+                ->paginate('5');
+        }
+
+        if (isset($request->category)) {
+            $blog = DB::table('blogs')
+                ->join('categories', 'blogs.id_category', '=', 'categories.id')
+                ->join('users', 'blogs.author', '=', 'users.id')
+                ->select('blogs.*', 'categories.category', 'users.name')
+                ->where('blogs.id_category', '=', $request->category)
+                ->orderBy('blogs.created_at', 'desc')
+                ->paginate('5');
+        }
+
+        $category = Category::get();
+        $tag = Tag::get();
+
+        return view('front.blog')
+            ->with('blog', $blog)
+            ->with('category', $category)
+            ->with('tag', $tag);
+    }
+
+    public function single($url)
+    {
+        $blog = DB::table('blogs')
+            ->join('categories', 'blogs.id_category', '=', 'categories.id')
+            ->join('users', 'blogs.author', '=', 'users.id')
+            ->select('blogs.*', 'categories.category', 'users.name')
+            ->where('blogs.url', '=', $url)
+            ->first();
+
+        $category = Category::get();
+        $tag = Tag::get();
+
+        return view('front.single')
+            ->with('blog', $blog)
+            ->with('category', $category)
+            ->with('tag', $tag);
     }
 
     public function show($id)
